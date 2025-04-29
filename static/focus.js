@@ -1,6 +1,7 @@
 const API = {
   organizationList: "/orgsList",
   analytics: "/api3/analytics",
+  analitics: "/api3/analitics",
   orgReqs: "/api3/reqBase",
   buhForms: "/api3/buh",
 };
@@ -11,20 +12,23 @@ async function run() {
     const ogrns = orgOgrns.join(",");
     const requisites = await sendRequest(`${API.orgReqs}?ogrn=${ogrns}`);
     const orgsMap = reqsToMap(requisites);
-    const analytics = await sendRequest(`${API.analytics}?ogrn=${ogrns}`);
+    const analytics = await sendRequest(`${API.analitics}?ogrn=${ogrns}`, []);
     addInOrgsMap(orgsMap, analytics, "analytics");
     const buh = await sendRequest(`${API.buhForms}?ogrn=${ogrns}`);
     addInOrgsMap(orgsMap, buh, "buhForms");
     render(orgsMap, orgOgrns);
-  } catch (err) {
-    console.error(err);
-  }
+  } catch {}
 }
 
 run();
 
-async function sendRequest(url) {
-  return await fetch(url).then((r) => r.json());
+async function sendRequest(url, defaultResp = null) {
+  return await fetch(url)
+    .then((r) => {
+      if (r.status != 200) return defaultResp;
+      return r.json();
+    })
+    .catch();
 }
 
 function reqsToMap(requisites) {
@@ -53,6 +57,7 @@ function render(organizationsInfo, organizationsOrder) {
 }
 
 function renderOrganization(orgInfo, template, container) {
+  console.log(orgInfo, template);
   const clone = document.importNode(template.content, true);
   const name = clone.querySelector(".name");
   const indebtedness = clone.querySelector(".indebtedness");
